@@ -1,0 +1,17 @@
+# .github/workflows/mirror.yml on the mirror's default branch (_mirror). Logic: kvnloo/home tools/fork-standard.
+name: mirror
+on:
+  schedule: [{cron: '32 22 * * *'}]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: mirror-sync
+    concurrency: {group: mirror-sync, cancel-in-progress: false}
+    steps:
+      - uses: actions/checkout@v5
+        with: {repository: kvnloo/home, token: '${{ secrets.MIRROR_TOKEN }}', path: .home, sparse-checkout: tools/fork-standard, persist-credentials: false}
+      - run: .home/tools/fork-standard/scripts/run-mirror.sh
+        env: {UPSTREAM: 'NVIDIA/k8s-device-plugin', FORK: 'kvnloo/k8s-device-plugin', BRANCH: 'main', MIRROR_TOKEN: '${{ secrets.MIRROR_TOKEN }}'}
